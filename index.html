@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>RadPath</title>
+  <style>
+    :root{
+      --bg:#020617;
+      --panel:#0f172a;
+      --panel-2:#111827;
+      --card:#0b1220;
+      --line:#243041;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#38bdf8;
+      --accent-2:#60a5fa;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#020617,#0f172a);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+    .hero{
+      background:linear-gradient(135deg,rgba(56,189,248,.17),rgba(96,165,250,.08));
+      border:1px solid rgba(56,189,248,.18);
+      border-radius:22px;
+      padding:20px;
+      margin-bottom:16px;
+      box-shadow:0 14px 35px rgba(0,0,0,.18);
+    }
+    h1,h2,h3{margin:0 0 10px}
+    p{margin:0}
+    .sub{color:var(--muted);line-height:1.65}
+    .top-kpis{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+    .kpi{
+      background:rgba(11,18,32,.75);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      min-height:82px;
+    }
+    .kpi .label{color:var(--muted);font-size:12px;margin-bottom:6px}
+    .tabs{
+      display:flex;gap:8px;flex-wrap:wrap;
+      position:sticky;top:0;padding:10px 0 12px;
+      backdrop-filter:blur(10px);
+      z-index:20;
+    }
+    .tab{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      background:rgba(15,23,42,.88);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:600;
+    }
+    .tab.active{background:var(--accent);color:#062132;border-color:transparent}
+    .section{display:none}
+    .section.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .card{
+      grid-column:span 12;
+      background:rgba(11,18,32,.92);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.18);
+    }
+    @media (min-width: 860px){
+      .span-4{grid-column:span 4}
+      .span-5{grid-column:span 5}
+      .span-6{grid-column:span 6}
+      .span-7{grid-column:span 7}
+      .span-8{grid-column:span 8}
+    }
+    @media (max-width: 640px){
+      .top-kpis{grid-template-columns:1fr}
+    }
+    label{display:block;color:#cbd5e1;font-size:14px;margin:11px 0 6px}
+    input,select,textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background:#081120;
+      color:var(--text);
+      border-radius:13px;
+      padding:12px 13px;
+      font-size:15px;
+      outline:none;
+    }
+    textarea{min-height:96px;resize:vertical}
+    .inline{display:flex;gap:8px;flex-wrap:wrap}
+    button{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      background:var(--accent);
+      color:#062132;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button.secondary{
+      background:transparent;
+      color:var(--text);
+      border:1px solid var(--line);
+      font-weight:700;
+    }
+    button.danger{
+      background:transparent;
+      color:#fecaca;
+      border:1px solid rgba(239,68,68,.4);
+    }
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .item{
+      background:#081120;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+    .item-top{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    }
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
+    .small{font-size:13px}
+    .pill{
+      display:inline-block;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#0b1324;
+      color:#cbd5e1;
+      font-size:12px;
+      margin-right:6px;
+    }
+    .check{display:flex;gap:10px;align-items:flex-start}
+    .check input[type="checkbox"]{width:18px;height:18px;margin-top:3px}
+    .done{text-decoration:line-through;color:#94a3b8}
+    .empty{color:var(--muted);padding:8px 0}
+    .progress{
+      height:10px;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:#081120;
+      margin-top:8px;
+    }
+    .progress > div{
+      height:100%;
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      width:0%;
+    }
+    .route{
+      margin-top:8px;
+      padding-left:12px;
+      border-left:4px solid var(--accent);
+      line-height:1.7;
+    }
+    .footer-note{color:var(--muted);font-size:12px;margin-top:10px}
+    .callout{
+      border:1px solid rgba(34,197,94,.25);
+      background:rgba(34,197,94,.08);
+      color:#dcfce7;
+      padding:12px;
+      border-radius:14px;
+      line-height:1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>RadPath</h1>
+      <p class="sub">診療放射線学生向けの将来設計アプリ。進路条件、学年別ロードマップ、タスク、候補先、メモをまとめて管理できます。保存はこの端末内だけに行われます。</p>
+      <div class="top-kpis">
+        <div class="kpi">
+          <div class="label">今の希望ルート</div>
+          <div id="heroRoute">救急 → 大病院 → メーカー視野</div>
+        </div>
+        <div class="kpi">
+          <div class="label">働き方の希望</div>
+          <div id="heroStyle">休み重視 / 年収800万円目標</div>
+        </div>
+        <div class="kpi">
+          <div class="label">今やるべきこと</div>
+          <div id="heroFocus">情報収集・英語・学会を知る</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="dashboard">ダッシュボード</button>
+      <button class="tab" data-tab="roadmap">学年ロードマップ</button>
+      <button class="tab" data-tab="tasks">タスク</button>
+      <button class="tab" data-tab="candidates">候補先</button>
+      <button class="tab" data-tab="notes">メモ</button>
+      <button class="tab" data-tab="settings">進路条件</button>
+    </div>
+
+    <section id="dashboard" class="section active">
+      <div class="grid">
+        <div class="card span-7">
+          <h2>現在の進路イメージ</h2>
+          <div id="summaryRouteText" class="route"></div>
+          <div class="footer-note">内容は「進路条件」タブでいつでも変更できます。</div>
+        </div>
+        <div class="card span-5">
+          <h2>全体進捗</h2>
+          <div class="muted small">ロードマップ・タスクの完了率</div>
+          <div class="progress"><div id="overallProgressBar"></div></div>
+          <div id="overallProgressText" class="small muted" style="margin-top:8px;"></div>
+          <div class="list">
+            <div class="item"><span class="tiny muted">未完了タスク</span><div id="openTaskCount"></div></div>
+            <div class="item"><span class="tiny muted">保存済み候補先</span><div id="candidateCount"></div></div>
+          </div>
+        </div>
+
+        <div class="card span-6">
+          <h2>今月やると強いこと</h2>
+          <div id="monthlyRecommendations" class="list"></div>
+        </div>
+        <div class="card span-6">
+          <h2>直近メモ</h2>
+          <div id="latestNotesPreview" class="list"></div>
+        </div>
+
+        <div class="card">
+          <div class="callout">
+            初期データとして、今まで話した方針を入れてあります。<br>
+            まずは「進路条件」を軽く直してから、「タスク」にやることを足していく使い方がおすすめです。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap" class="section">
+      <div class="grid">
+        <div class="card">
+          <h2>学年別ロードマップ</h2>
+          <p class="sub">学年ごとにやることを整理できます。チェックを入れると進捗に反映されます。</p>
+        </div>
+
+        <div class="card span-6">
+          <h3>1年</h3>
+          <div id="year1List" class="list"></div>
+          <div class="inline">
+            <input id="year1Input" placeholder="1年でやることを追加">
+            <button onclick="addRoadmapItem(1)">追加</button>
+          </div>
+        </div>
+
+        <div class="card span-6">
+          <h3>2年</h3>
+          <div id="year2List" class="list"></div>
+          <div class="inline">
+            <input id="year2Input" placeholder="2年でやることを追加">
+            <button onclick="addRoadmapItem(2)">追加</button>
+          </div>
+        </div>
+
+        <div class="card span-6">
+          <h3>3年</h3>
+          <div id="year3List" class="list"></div>
+          <div class="inline">
+            <input id="year3Input" placeholder="3年でやることを追加">
+            <button onclick="addRoadmapItem(3)">追加</button>
+          </div>
+        </div>
+
+        <div class="card span-6">
+          <h3>4年</h3>
+          <div id="year4List" class="list"></div>
+          <div class="inline">
+            <input id="year4Input" placeholder="4年でやることを追加">
+            <button onclick="addRoadmapItem(4)">追加</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks" class="section">
+      <div class="grid">
+        <div class="card span-5">
+          <h2>タスク追加</h2>
+          <label>内容</label>
+          <input id="taskTitle" placeholder="例：気になる大学病院を3つ調べる">
+          <label>期限</label>
+          <input id="taskDue" type="date">
+          <label>カテゴリ</label>
+          <select id="taskCategory">
+            <option>学会</option>
+            <option>英語</option>
+            <option>病院研究</option>
+            <option>企業研究</option>
+            <option>実習準備</option>
+            <option>その他</option>
+          </select>
+          <label>メモ</label>
+          <textarea id="taskMemo" placeholder="補足メモ"></textarea>
+          <div class="inline">
+            <button onclick="addTask()">保存</button>
+          </div>
+        </div>
+        <div class="card span-7">
+          <h2>タスク一覧</h2>
+          <div id="taskList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="candidates" class="section">
+      <div class="grid">
+        <div class="card span-5">
+          <h2>候補先を追加</h2>
+          <label>種類</label>
+          <select id="candidateType">
+            <option>病院</option>
+            <option>メーカー</option>
+            <option>医療IT</option>
+            <option>その他</option>
+          </select>
+          <label>名前</label>
+          <input id="candidateName" placeholder="例：順天堂医院">
+          <label>理由</label>
+          <textarea id="candidateReason" placeholder="気になる理由や強み"></textarea>
+          <button onclick="addCandidate()">追加</button>
+        </div>
+        <div class="card span-7">
+          <h2>候補一覧</h2>
+          <div id="candidateList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="notes" class="section">
+      <div class="grid">
+        <div class="card span-5">
+          <h2>メモを書く</h2>
+          <label>タイトル</label>
+          <input id="noteTitle" placeholder="例：救急に惹かれる理由">
+          <label>本文</label>
+          <textarea id="noteBody" placeholder="自由に記録"></textarea>
+          <button onclick="addNote()">保存</button>
+        </div>
+        <div class="card span-7">
+          <h2>メモ一覧</h2>
+          <div id="notesList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="settings" class="section">
+      <div class="grid">
+        <div class="card span-6">
+          <h2>進路条件</h2>
+          <label>目標年収（万円）</label>
+          <input id="goalIncome" type="number" min="300" step="10">
+          <label>働き方の優先</label>
+          <select id="priorityStyle">
+            <option>休み重視</option>
+            <option>年収重視</option>
+            <option>バランス重視</option>
+          </select>
+          <label>今の興味</label>
+          <select id="interestFocus">
+            <option>救急のチーム医療</option>
+            <option>CT / MRI</option>
+            <option>研究・学会</option>
+            <option>企業キャリア</option>
+          </select>
+          <label>第一候補ルート</label>
+          <select id="routePlan">
+            <option>救急 → 大病院 → メーカー視野</option>
+            <option>救急 → 大病院で継続</option>
+            <option>病院 → 医療IT</option>
+            <option>まだ未定</option>
+          </select>
+          <label>今の一言メモ</label>
+          <textarea id="settingsMemo" placeholder="例：まずは救急現場を知ってから考えたい"></textarea>
+          <div class="inline">
+            <button onclick="saveSettings()">保存</button>
+            <button class="secondary" onclick="resetAll()">初期状態に戻す</button>
+          </div>
+        </div>
+
+        <div class="card span-6">
+          <h2>このアプリの使い方</h2>
+          <div class="list">
+            <div class="item">1. 進路条件をざっくり入れる</div>
+            <div class="item">2. ロードマップの項目を見て、自分に合わせて足したり消したりする</div>
+            <div class="item">3. タスクに「今月やること」を入れる</div>
+            <div class="item">4. 候補先に病院やメーカーをメモする</div>
+            <div class="item">5. メモに考えの変化を残す</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+const STORAGE_KEY = "radpath_v2_data";
+
+function uid(){
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+function nowText(){
+  const d = new Date();
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+const defaultData = {
+  settings: {
+    goalIncome: 800,
+    priorityStyle: "休み重視",
+    interestFocus: "救急のチーム医療",
+    routePlan: "救急 → 大病院 → メーカー視野",
+    settingsMemo: "救急のチーム医療に憧れ。将来的には休みと年収のバランスも重視したい。"
+  },
+  roadmap: {
+    1: [
+      { text: "放射線技師の進路を広く知る（病院・メーカー・医療IT）", done: false },
+      { text: "英語に少し慣れる", done: false },
+      { text: "学会や展示会がどんなものか知る", done: false }
+    ],
+    2: [
+      { text: "気になる病院・メーカーをリスト化する", done: false },
+      { text: "学会参加を1回経験する", done: false },
+      { text: "CT / MRI / 救急の違いを理解する", done: false }
+    ],
+    3: [
+      { text: "実習で救急・CT・MRIの相性を観察する", done: false },
+      { text: "就活の方向を病院か企業かで整理する", done: false },
+      { text: "大病院の特徴と転職しやすさを比較する", done: false }
+    ],
+    4: [
+      { text: "国家試験対策を優先しつつ応募先を整理する", done: false },
+      { text: "臨床で経験したい領域を明確にする", done: false },
+      { text: "メーカーを視野に入れるなら将来使う経験を意識する", done: false }
+    ]
+  },
+  tasks: [
+    { id: uid(), title: "順天堂・関東の大病院を3つ調べる", due: "", category: "病院研究", memo: "", done: false },
+    { id: uid(), title: "医療機器メーカーの職種を確認する", due: "", category: "企業研究", memo: "アプリケーション、営業、臨床寄り職種", done: false }
+  ],
+  candidates: [
+    { id: uid(), type: "病院", name: "順天堂医院", reason: "大病院・救急・将来の経験値として強そう" },
+    { id: uid(), type: "メーカー", name: "キヤノンメディカルシステムズ", reason: "放射線領域で王道。将来候補として記録" }
+  ],
+  notes: [
+    { id: uid(), title: "今の軸", body: "救急のチーム医療に惹かれている。機械いじりが特別好きではないので、まずは臨床で現場を知りたい。", createdAt: nowText() }
+  ]
+};
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){
+    const fresh = clone(defaultData);
+    saveData(fresh);
+    return fresh;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const fresh = clone(defaultData);
+    saveData(fresh);
+    return fresh;
+  }
+}
+function saveData(d){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+}
+let data = loadData();
+
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+function escapeHtml(str){
+  return String(str ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
+function renderAll(){
+  renderSettings();
+  renderHero();
+  renderSummary();
+  renderRoadmap();
+  renderTasks();
+  renderCandidates();
+  renderNotes();
+  renderDashboard();
+}
+
+function renderSettings(){
+  goalIncome.value = data.settings.goalIncome ?? 800;
+  priorityStyle.value = data.settings.priorityStyle ?? "休み重視";
+  interestFocus.value = data.settings.interestFocus ?? "救急のチーム医療";
+  routePlan.value = data.settings.routePlan ?? "救急 → 大病院 → メーカー視野";
+  settingsMemo.value = data.settings.settingsMemo ?? "";
+}
+
+function saveSettings(){
+  data.settings.goalIncome = Number(goalIncome.value || 800);
+  data.settings.priorityStyle = priorityStyle.value;
+  data.settings.interestFocus = interestFocus.value;
+  data.settings.routePlan = routePlan.value;
+  data.settings.settingsMemo = settingsMemo.value.trim();
+  saveData(data);
+  renderAll();
+  alert("進路条件を保存しました");
+}
+
+function resetAll(){
+  if(!confirm("保存済みデータを初期状態に戻します。よければOKを押してください。")) return;
+  data = clone(defaultData);
+  saveData(data);
+  renderAll();
+}
+
+function renderHero(){
+  heroRoute.textContent = data.settings.routePlan;
+  heroStyle.textContent = `${data.settings.priorityStyle} / 年収${data.settings.goalIncome}万円目標`;
+  let focusText = "情報収集・英語・学会を知る";
+  if(data.settings.interestFocus === "CT / MRI") focusText = "CT / MRIへの相性を知る";
+  if(data.settings.interestFocus === "研究・学会") focusText = "学会・研究に触れる";
+  if(data.settings.interestFocus === "企業キャリア") focusText = "病院経験と企業のつながりを知る";
+  heroFocus.textContent = focusText;
+}
+
+function renderSummary(){
+  const memo = data.settings.settingsMemo ? `現在のメモ：${escapeHtml(data.settings.settingsMemo)}` : "現在のメモは未入力";
+  summaryRouteText.innerHTML = `
+    第一候補：<strong>${escapeHtml(data.settings.routePlan)}</strong><br>
+    働き方：${escapeHtml(data.settings.priorityStyle)}<br>
+    目標年収：${escapeHtml(data.settings.goalIncome)}万円<br>
+    興味：${escapeHtml(data.settings.interestFocus)}<br>
+    ${memo}
+  `;
+}
+
+function roadmapList(year){
+  return data.roadmap[String(year)] || [];
+}
+
+function renderRoadmap(){
+  [1,2,3,4].forEach(year=>{
+    const el = document.getElementById(`year${year}List`);
+    const items = roadmapList(year);
+    if(items.length === 0){
+      el.innerHTML = `<div class="empty">まだ項目がありません</div>`;
+      return;
+    }
+    el.innerHTML = items.map((item, idx)=>`
+      <div class="item">
+        <div class="item-top">
+          <label class="check" style="margin:0;">
+            <input type="checkbox" ${item.done ? "checked":""} onchange="toggleRoadmap(${year}, ${idx})">
+            <div class="${item.done ? "done" : ""}">${escapeHtml(item.text)}</div>
+          </label>
+          <button class="danger small" onclick="deleteRoadmapItem(${year}, ${idx})">削除</button>
+        </div>
+      </div>
+    `).join("");
+  });
+}
+
+function addRoadmapItem(year){
+  const input = document.getElementById(`year${year}Input`);
+  const v = input.value.trim();
+  if(!v) return;
+  data.roadmap[String(year)].push({ text: v, done: false });
+  input.value = "";
+  saveData(data);
+  renderAll();
+}
+function toggleRoadmap(year, idx){
+  const item = data.roadmap[String(year)][idx];
+  item.done = !item.done;
+  saveData(data);
+  renderAll();
+}
+function deleteRoadmapItem(year, idx){
+  data.roadmap[String(year)].splice(idx,1);
+  saveData(data);
+  renderAll();
+}
+
+function addTask(){
+  const title = taskTitle.value.trim();
+  if(!title) return;
+  data.tasks.unshift({
+    id: uid(),
+    title,
+    due: taskDue.value,
+    category: taskCategory.value,
+    memo: taskMemo.value.trim(),
+    done: false
+  });
+  taskTitle.value = "";
+  taskDue.value = "";
+  taskMemo.value = "";
+  saveData(data);
+  renderAll();
+}
+function toggleTask(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.done = !t.done;
+  saveData(data);
+  renderAll();
+}
+function deleteTask(id){
+  data.tasks = data.tasks.filter(x=>x.id!==id);
+  saveData(data);
+  renderAll();
+}
+function renderTasks(){
+  if(data.tasks.length===0){
+    taskList.innerHTML = `<div class="empty">まだタスクがありません</div>`;
+    return;
+  }
+  taskList.innerHTML = data.tasks.map(t=>`
+    <div class="item">
+      <div class="item-top">
+        <label class="check" style="margin:0;">
+          <input type="checkbox" ${t.done ? "checked":""} onchange="toggleTask('${t.id}')">
+          <div>
+            <div class="${t.done ? "done":""}">${escapeHtml(t.title)}</div>
+            <div class="small muted">
+              ${t.category ? `<span class="pill">${escapeHtml(t.category)}</span>` : ""}
+              ${t.due ? `期限：${escapeHtml(t.due)}` : "期限なし"}
+            </div>
+            ${t.memo ? `<div class="small muted" style="margin-top:6px;">${escapeHtml(t.memo)}</div>` : ""}
+          </div>
+        </label>
+        <button class="danger small" onclick="deleteTask('${t.id}')">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addCandidate(){
+  const name = candidateName.value.trim();
+  if(!name) return;
+  data.candidates.unshift({
+    id: uid(),
+    type: candidateType.value,
+    name,
+    reason: candidateReason.value.trim()
+  });
+  candidateName.value = "";
+  candidateReason.value = "";
+  saveData(data);
+  renderAll();
+}
+function deleteCandidate(id){
+  data.candidates = data.candidates.filter(x=>x.id!==id);
+  saveData(data);
+  renderAll();
+}
+function renderCandidates(){
+  if(data.candidates.length===0){
+    candidateList.innerHTML = `<div class="empty">まだ候補先がありません</div>`;
+    return;
+  }
+  candidateList.innerHTML = data.candidates.map(c=>`
+    <div class="item">
+      <div class="item-top">
+        <div>
+          <span class="pill">${escapeHtml(c.type)}</span>
+          <strong>${escapeHtml(c.name)}</strong>
+          ${c.reason ? `<div class="small muted" style="margin-top:6px;">${escapeHtml(c.reason)}</div>` : ""}
+        </div>
+        <button class="danger small" onclick="deleteCandidate('${c.id}')">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addNote(){
+  const title = noteTitle.value.trim();
+  const body = noteBody.value.trim();
+  if(!title && !body) return;
+  data.notes.unshift({
+    id: uid(),
+    title: title || "無題メモ",
+    body,
+    createdAt: nowText()
+  });
+  noteTitle.value = "";
+  noteBody.value = "";
+  saveData(data);
+  renderAll();
+}
+function deleteNote(id){
+  data.notes = data.notes.filter(x=>x.id!==id);
+  saveData(data);
+  renderAll();
+}
+function renderNotes(){
+  if(data.notes.length===0){
+    notesList.innerHTML = `<div class="empty">まだメモがありません</div>`;
+    return;
+  }
+  notesList.innerHTML = data.notes.map(n=>`
+    <div class="item">
+      <div class="item-top">
+        <div>
+          <strong>${escapeHtml(n.title)}</strong>
+          <div class="tiny muted" style="margin-top:4px;">${escapeHtml(n.createdAt)}</div>
+          ${n.body ? `<div style="margin-top:8px;line-height:1.7;">${escapeHtml(n.body).replaceAll("\\n","<br>")}</div>` : ""}
+        </div>
+        <button class="danger small" onclick="deleteNote('${n.id}')">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderDashboard(){
+  const roadmapItems = [1,2,3,4].flatMap(y => roadmapList(y));
+  const totalRoadmap = roadmapItems.length;
+  const doneRoadmap = roadmapItems.filter(x=>x.done).length;
+  const totalTasks = data.tasks.length;
+  const doneTasks = data.tasks.filter(x=>x.done).length;
+  const totalAll = totalRoadmap + totalTasks;
+  const doneAll = doneRoadmap + doneTasks;
+  const percent = totalAll === 0 ? 0 : Math.round(doneAll / totalAll * 100);
+
+  overallProgressBar.style.width = percent + "%";
+  overallProgressText.textContent = `${doneAll} / ${totalAll} 完了（${percent}%）`;
+  openTaskCount.textContent = String(data.tasks.filter(x=>!x.done).length);
+  candidateCount.textContent = String(data.candidates.length);
+
+  const recs = recommendationsFromState();
+  monthlyRecommendations.innerHTML = recs.map(r=>`<div class="item">${escapeHtml(r)}</div>`).join("");
+
+  if(data.notes.length === 0){
+    latestNotesPreview.innerHTML = `<div class="empty">まだメモがありません</div>`;
+  } else {
+    latestNotesPreview.innerHTML = data.notes.slice(0,3).map(n=>`
+      <div class="item">
+        <strong>${escapeHtml(n.title)}</strong>
+        <div class="tiny muted" style="margin-top:4px;">${escapeHtml(n.createdAt)}</div>
+        <div class="small muted" style="margin-top:6px;">${escapeHtml((n.body || "").slice(0,60))}${(n.body || "").length > 60 ? "…" : ""}</div>
+      </div>
+    `).join("");
+  }
+}
+
+function recommendationsFromState(){
+  const recs = [];
+  if(data.settings.interestFocus === "救急のチーム医療"){
+    recs.push("救急に強い大病院を3つ比較してメモする");
+    recs.push("CTとMRIの役割の違いをざっくり理解する");
+  }
+  if(data.settings.priorityStyle === "休み重視"){
+    recs.push("病院とメーカーで働き方がどう違うか整理する");
+  }
+  if((data.settings.goalIncome || 0) >= 800){
+    recs.push("臨床3〜5年後のメーカー転職ルートを意識して情報収集する");
+  }
+  recs.push("学会参加がどんなものか1回調べる");
+  return recs.slice(0,4);
+}
+
+renderAll();
+</script>
+</body>
+</html>
